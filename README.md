@@ -21,7 +21,7 @@ Perfect for personal APIs, internal microservices, hobby SaaS projects, or as a 
 | Algorithm       | Token bucket (atomic via Redis + Lua)                    |
 | Key dimensions  | Any combination of route, userId, clientApp, httpMethod, ipAddress |
 | Policy CRUD     | Create & update via REST                                 |
-| Runtime checks  | `/api/ratelimit/check` drains/denies in real-time        |
+| Runtime checks  | `/rate-limit` drains/denies in real-time        |
 | Auth            | X-API-Key header (simple allow-list)                     |
 | Observability   | InfluxDB time-series + Grafana dashboards                |
 | Docs / DX       | Swagger UI (`/swagger-ui.html`)                          |

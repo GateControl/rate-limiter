@@ -1,0 +1,78 @@
+{
+  "uid": "rate-limiter-dashboard",
+  "title": "Rate Limiter Dashboard",
+  "tags": ["rate limiter"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": []
+  },
+  "templating": {
+    "list": [
+      {
+        "type": "query",
+        "name": "policyId",
+        "label": "Policy ID",
+        "datasource": "InfluxDB",
+        "refresh": 2,
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"rate_limiter\", tag: \"policyId\")",
+        "regex": "",
+        "multi": false,
+        "includeAll": false,
+        "sort": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "datasource": "InfluxDB",
+      "type": "piechart",
+      "title": "Allow vs Throttle Count",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "id": 1,
+      "options": {
+        "legend": {"displayMode": "list", "placement": "right"},
+        "pieType": "pie",
+        "fieldOptions": {
+          "calcs": ["last"],
+          "defaults": {"unit": "none"},
+          "overrides": []
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"rate_limiter\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"token_bucket_metrics\")\n  |> filter(fn: (r) => r._field == \"allowCount\" or r._field == \"throttleCount\")\n  |> filter(fn: (r) => r.policyId == \"${policyId}\")\n  |> last()",
+          "type": "flux"
+        }
+      ]
+    },
+    {
+      "datasource": "InfluxDB",
+      "type": "timeseries",
+      "title": "Remaining Tokens Over Time",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "id": 2,
+      "fieldConfig": {
+        "defaults": {"unit": "none"},
+        "overrides": []
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "right"}
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"rate_limiter\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"token_bucket_current_tokens\")\n  |> filter(fn: (r) => r._field == \"tokens\")\n  |> filter(fn: (r) => r.policyId == \"${policyId}\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield()",
+          "type": "flux"
+        }
+      ]
+    }
+  ]
+}
